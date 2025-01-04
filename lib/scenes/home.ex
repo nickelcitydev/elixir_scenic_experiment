@@ -8,7 +8,9 @@ defmodule MyApp.Scene.Home do
   import Scenic.Primitives
   # import Scenic.Components
 
-  @frame_ms 120
+  @frame_ms 90
+
+  @step 8
 
   @input_classes [:codepoint, :key]
 
@@ -67,9 +69,8 @@ defmodule MyApp.Scene.Home do
     {{src_x, src_y}, {src_w, src_h}, {_dst_x, _dst_y}, {dst_w, dst_h}} = Enum.at(@idle_sprites, 0)
 
     player_sprite =
-      {{src_x, src_y}, {src_w, src_h},
-       {(MyApp.Utils.screen_width() / 2 - 16) |> trunc(),
-        (MyApp.Utils.screen_height() / 2 - 16) |> trunc()}, {dst_w, dst_h}}
+      {{src_x, src_y}, {src_w, src_h}, {0, (MyApp.Utils.screen_height() / 2 - 16) |> trunc()},
+       {dst_w, dst_h}}
 
     graph =
       Graph.build()
@@ -94,7 +95,8 @@ defmodule MyApp.Scene.Home do
         frame: 1,
         previous_frame: 0,
         player_sprite: player_sprite,
-        is_walking: false
+        is_walking: false,
+        direction: :right
       )
       |> push_graph(graph)
 
@@ -109,6 +111,7 @@ defmodule MyApp.Scene.Home do
 
     frame = scene.assigns.frame
     previous_frame = scene.assigns.previous_frame
+    direction = scene.assigns.direction
 
     new_frame =
       cond do
@@ -124,6 +127,17 @@ defmodule MyApp.Scene.Home do
         @idle_sprites
       end
 
+    new_dst_x =
+      if scene.assigns.is_walking do
+        if direction == :right do
+          dst_x + @step
+        else
+          dst_x - @step
+        end
+      else
+        dst_x
+      end
+
     player_sprite = Enum.at(sprites, new_frame) |> elem(0)
 
     # update the graph
@@ -136,9 +150,7 @@ defmodule MyApp.Scene.Home do
           &1,
           {@character_sprite_path,
            [
-             {player_sprite, {src_w, src_h},
-              {(MyApp.Utils.screen_width() / 2 - 16) |> trunc(),
-               (MyApp.Utils.screen_height() / 2 - 16) |> trunc()}, {dst_w, dst_h}}
+             {player_sprite, {src_w, src_h}, {new_dst_x, dst_y}, {dst_w, dst_h}}
            ]}
         )
       )
@@ -150,7 +162,7 @@ defmodule MyApp.Scene.Home do
     scene =
       scene
       |> assign(
-        player_sprite: {player_sprite, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}},
+        player_sprite: {player_sprite, {src_w, src_h}, {new_dst_x, dst_y}, {dst_w, dst_h}},
         frame: new_frame,
         previous_frame: frame
       )
@@ -163,28 +175,33 @@ defmodule MyApp.Scene.Home do
     # update the state to idle
     scene =
       scene
-      |> assign(is_walking: false)
+      |> assign(is_walking: false, direction: :right)
 
     {:noreply, scene}
   end
 
   # keydown d key (initiate walking)
-  def handle_input({:key, {:key_d, 1, _}} = _event, _context, scene) do
+  def handle_input({:key, {:key_d, _, _}} = _event, _context, scene) do
     # update the state
     scene =
       scene
-      |> assign(is_walking: true)
+      |> assign(is_walking: true, direction: :right)
 
     {:noreply, scene}
   end
 
-  # press and hold d key (walking)
-  def handle_input({:key, {:key_d, 2, _}} = _event, _context, scene) do
-    # update the state
+  # releasing d key (stop walking)
+  def handle_input({:key, {:key_a, 0, _}} = _event, _context, scene) do
+    # update the state to idle
     scene =
       scene
-      |> assign(is_walking: true)
+      |> assign(is_walking: false, direction: :right)
 
+    {:noreply, scene}
+  end
+
+  def handle_input({:key, {:key_a, _, _}} = _event, _context, scene) do
+    scene = scene |> assign(is_walking: true, direction: :left)
     {:noreply, scene}
   end
 
