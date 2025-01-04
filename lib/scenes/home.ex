@@ -15,42 +15,42 @@ defmodule MyApp.Scene.Home do
   @character_sprite_path "sprites/rogue.png"
 
   @idle_sprites [
-    {{0, 0}, {32, 32}, {80, 80}, {128, 128}},
-    {{32, 0}, {32, 32}, {80, 80}, {128, 128}},
-    {{64, 0}, {32, 32}, {80, 80}, {128, 128}},
-    {{96, 0}, {32, 32}, {80, 80}, {128, 128}},
-    {{128, 0}, {32, 32}, {80, 80}, {128, 128}},
-    {{160, 0}, {32, 32}, {80, 80}, {128, 128}},
-    {{192, 0}, {32, 32}, {80, 80}, {128, 128}},
-    {{224, 0}, {32, 32}, {80, 80}, {128, 128}},
-    {{256, 0}, {32, 32}, {80, 80}, {128, 128}},
-    {{288, 0}, {32, 32}, {80, 80}, {128, 128}}
+    {{0, 0}, {32, 32}, {80, 80}, {64, 64}},
+    {{32, 0}, {32, 32}, {80, 80}, {64, 64}},
+    {{64, 0}, {32, 32}, {80, 80}, {64, 64}},
+    {{96, 0}, {32, 32}, {80, 80}, {64, 64}},
+    {{128, 0}, {32, 32}, {80, 80}, {64, 64}},
+    {{160, 0}, {32, 32}, {80, 80}, {64, 64}},
+    {{192, 0}, {32, 32}, {80, 80}, {64, 64}},
+    {{224, 0}, {32, 32}, {80, 80}, {64, 64}},
+    {{256, 0}, {32, 32}, {80, 80}, {64, 64}},
+    {{288, 0}, {32, 32}, {80, 80}, {64, 64}}
   ]
 
   @gesture_sprites [
-    {{0, 32}, {32, 32}, {80, 80}, {128, 128}},
-    {{32, 32}, {32, 32}, {80, 80}, {128, 128}},
-    {{64, 32}, {32, 32}, {80, 80}, {128, 128}},
-    {{96, 32}, {32, 32}, {80, 80}, {128, 128}},
-    {{128, 32}, {32, 32}, {80, 80}, {128, 128}},
-    {{160, 32}, {32, 32}, {80, 80}, {128, 128}},
-    {{192, 32}, {32, 32}, {80, 80}, {128, 128}},
-    {{224, 32}, {32, 32}, {80, 80}, {128, 128}},
-    {{256, 32}, {32, 32}, {80, 80}, {128, 128}},
-    {{288, 32}, {32, 32}, {80, 80}, {128, 128}}
+    {{0, 32}, {32, 32}, {80, 80}, {64, 64}},
+    {{32, 32}, {32, 32}, {80, 80}, {64, 64}},
+    {{64, 32}, {32, 32}, {80, 80}, {64, 64}},
+    {{96, 32}, {32, 32}, {80, 80}, {64, 64}},
+    {{128, 32}, {32, 32}, {80, 80}, {64, 64}},
+    {{160, 32}, {32, 32}, {80, 80}, {64, 64}},
+    {{192, 32}, {32, 32}, {80, 80}, {64, 64}},
+    {{224, 32}, {32, 32}, {80, 80}, {64, 64}},
+    {{256, 32}, {32, 32}, {80, 80}, {64, 64}},
+    {{288, 32}, {32, 32}, {80, 80}, {64, 64}}
   ]
 
   @walking_sprites [
-    {{0, 64}, {32, 32}, {80, 80}, {128, 128}},
-    {{32, 64}, {32, 32}, {80, 80}, {128, 128}},
-    {{64, 64}, {32, 32}, {80, 80}, {128, 128}},
-    {{96, 64}, {32, 32}, {80, 80}, {128, 128}},
-    {{128, 64}, {32, 32}, {80, 80}, {128, 128}},
-    {{160, 64}, {32, 32}, {80, 80}, {128, 128}},
-    {{192, 64}, {32, 32}, {80, 80}, {128, 128}},
-    {{224, 64}, {32, 32}, {80, 80}, {128, 128}},
-    {{256, 64}, {32, 32}, {80, 80}, {128, 128}},
-    {{288, 64}, {32, 32}, {80, 80}, {128, 128}}
+    {{0, 64}, {32, 32}, {80, 80}, {64, 64}},
+    {{32, 64}, {32, 32}, {80, 80}, {64, 64}},
+    {{64, 64}, {32, 32}, {80, 80}, {64, 64}},
+    {{96, 64}, {32, 32}, {80, 80}, {64, 64}},
+    {{128, 64}, {32, 32}, {80, 80}, {64, 64}},
+    {{160, 64}, {32, 32}, {80, 80}, {64, 64}},
+    {{192, 64}, {32, 32}, {80, 80}, {64, 64}},
+    {{224, 64}, {32, 32}, {80, 80}, {64, 64}},
+    {{256, 64}, {32, 32}, {80, 80}, {64, 64}},
+    {{288, 64}, {32, 32}, {80, 80}, {64, 64}}
   ]
 
   # ============================================================================
@@ -95,6 +95,7 @@ defmodule MyApp.Scene.Home do
     {:ok, scene}
   end
 
+  # game loop
   def handle_info(:frame, scene) do
     # pattern match out the coordinates
     {{_src_x, _src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}} =
@@ -108,7 +109,14 @@ defmodule MyApp.Scene.Home do
         true -> 0
       end
 
-    player_sprite = Enum.at(@idle_sprites, new_frame) |> elem(0)
+    sprites =
+      if scene.assigns.is_walking do
+        @walking_sprites
+      else
+        @idle_sprites
+      end
+
+    player_sprite = Enum.at(sprites, new_frame) |> elem(0)
 
     # update the graph
     graph =
@@ -120,10 +128,15 @@ defmodule MyApp.Scene.Home do
           &1,
           {@character_sprite_path,
            [
-             {player_sprite, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}}
+             {player_sprite, {src_w, src_h},
+              {(MyApp.Utils.screen_width() / 2 - 16) |> trunc(),
+               (MyApp.Utils.screen_height() / 2 - 16) |> trunc()}, {dst_w, dst_h}}
            ]}
         )
       )
+
+    # push out the graph to the scene
+    push_graph(scene, graph)
 
     # update the state
     scene =
@@ -133,14 +146,10 @@ defmodule MyApp.Scene.Home do
         frame: new_frame
       )
 
-    # push out the graph to the scene
-    if !scene.assigns.is_walking do
-      push_graph(scene, graph)
-    end
-
     {:noreply, scene}
   end
 
+  # releasing d key (stop walking)
   def handle_input({:key, {:key_d, 0, _}} = event, _context, scene) do
     IO.inspect(event)
     # pattern match out the coordinates
@@ -181,12 +190,10 @@ defmodule MyApp.Scene.Home do
         is_walking: false
       )
 
-    # push out the graph to the scene
-    push_graph(scene, graph)
-
     {:noreply, scene}
   end
 
+  # keydown d key (initiate walking)
   def handle_input({:key, {:key_d, 1, _}} = event, _context, scene) do
     IO.inspect(event)
     # pattern match out the coordinates
@@ -201,22 +208,14 @@ defmodule MyApp.Scene.Home do
         true -> 0
       end
 
-    player_sprite = Enum.at(@walking_sprites, new_frame) |> elem(0)
+    sprites =
+      if scene.assigns.is_walking do
+        @walking_sprites
+      else
+        @idle_sprites
+      end
 
-    # update the graph
-    graph =
-      scene.assigns.graph
-      # |> Graph.modify(:rect, &rect(&1, {25, 25}, fill: {:color, {frame, 0, 0}}))
-      |> Graph.modify(
-        :sprites,
-        &sprites(
-          &1,
-          {@character_sprite_path,
-           [
-             {player_sprite, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}}
-           ]}
-        )
-      )
+    player_sprite = Enum.at(sprites, new_frame) |> elem(0)
 
     # update the state
     scene =
@@ -227,12 +226,10 @@ defmodule MyApp.Scene.Home do
         is_walking: true
       )
 
-    # push out the graph to the scene
-    push_graph(scene, graph)
-
     {:noreply, scene}
   end
 
+  # press and hold d key (walking)
   def handle_input({:key, {:key_d, 2, _}} = event, _context, scene) do
     IO.inspect(event)
     # pattern match out the coordinates
@@ -249,21 +246,6 @@ defmodule MyApp.Scene.Home do
 
     player_sprite = Enum.at(@walking_sprites, new_frame) |> elem(0)
 
-    # update the graph
-    graph =
-      scene.assigns.graph
-      # |> Graph.modify(:rect, &rect(&1, {25, 25}, fill: {:color, {frame, 0, 0}}))
-      |> Graph.modify(
-        :sprites,
-        &sprites(
-          &1,
-          {@character_sprite_path,
-           [
-             {player_sprite, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}}
-           ]}
-        )
-      )
-
     # update the state
     scene =
       scene
@@ -272,9 +254,6 @@ defmodule MyApp.Scene.Home do
         frame: new_frame,
         is_walking: true
       )
-
-    # push out the graph to the scene
-    push_graph(scene, graph)
 
     {:noreply, scene}
   end
