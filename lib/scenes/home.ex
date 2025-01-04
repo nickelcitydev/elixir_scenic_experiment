@@ -8,7 +8,7 @@ defmodule MyApp.Scene.Home do
   import Scenic.Primitives
   # import Scenic.Components
 
-  @frame_ms 333
+  @frame_ms 120
 
   @input_classes [:codepoint, :key]
 
@@ -64,7 +64,12 @@ defmodule MyApp.Scene.Home do
     # animation timer
     {:ok, timer} = :timer.send_interval(@frame_ms, :frame)
 
-    player_sprite = Enum.at(@walking_sprites, 0)
+    {{src_x, src_y}, {src_w, src_h}, {_dst_x, _dst_y}, {dst_w, dst_h}} = Enum.at(@idle_sprites, 0)
+
+    player_sprite =
+      {{src_x, src_y}, {src_w, src_h},
+       {(MyApp.Utils.screen_width() / 2 - 16) |> trunc(),
+        (MyApp.Utils.screen_height() / 2 - 16) |> trunc()}, {dst_w, dst_h}}
 
     graph =
       Graph.build()
