@@ -8,7 +8,7 @@ defmodule MyApp.Scene.Home do
   import Scenic.Primitives
   # import Scenic.Components
 
-  @frame_ms 240
+  @frame_ms 333
 
   @input_classes [:codepoint, :key]
 
@@ -85,8 +85,9 @@ defmodule MyApp.Scene.Home do
       scene
       |> assign(
         graph: graph,
-        frame_timer: timer,
-        frame: 0,
+        timer: timer,
+        frame: 1,
+        previous_frame: 0,
         player_sprite: player_sprite,
         is_walking: false
       )
@@ -102,11 +103,13 @@ defmodule MyApp.Scene.Home do
       scene.assigns.player_sprite
 
     frame = scene.assigns.frame
+    previous_frame = scene.assigns.previous_frame
 
     new_frame =
       cond do
-        frame < 9 -> frame + 1
-        true -> 0
+        frame - previous_frame > 1 and frame < 9 -> frame + 1
+        frame == 9 -> 0
+        true -> frame + 1
       end
 
     sprites =
@@ -143,117 +146,39 @@ defmodule MyApp.Scene.Home do
       scene
       |> assign(
         player_sprite: {player_sprite, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}},
-        frame: new_frame
+        frame: new_frame,
+        previous_frame: frame
       )
 
     {:noreply, scene}
   end
 
   # releasing d key (stop walking)
-  def handle_input({:key, {:key_d, 0, _}} = event, _context, scene) do
-    IO.inspect(event)
-    # pattern match out the coordinates
-    {{_src_x, _src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}} =
-      scene.assigns.player_sprite
-
-    frame = scene.assigns.frame
-
-    new_frame =
-      cond do
-        frame < 9 -> frame + 1
-        true -> 0
-      end
-
-    player_sprite = Enum.at(@idle_sprites, new_frame) |> elem(0)
-
-    # update the graph
-    graph =
-      scene.assigns.graph
-      # |> Graph.modify(:rect, &rect(&1, {25, 25}, fill: {:color, {frame, 0, 0}}))
-      |> Graph.modify(
-        :sprites,
-        &sprites(
-          &1,
-          {@character_sprite_path,
-           [
-             {player_sprite, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}}
-           ]}
-        )
-      )
-
-    # update the state
+  def handle_input({:key, {:key_d, 0, _}} = _event, _context, scene) do
+    # update the state to idle
     scene =
       scene
-      |> assign(
-        player_sprite: {player_sprite, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}},
-        frame: new_frame,
-        is_walking: false
-      )
+      |> assign(is_walking: false)
 
     {:noreply, scene}
   end
 
   # keydown d key (initiate walking)
-  def handle_input({:key, {:key_d, 1, _}} = event, _context, scene) do
-    IO.inspect(event)
-    # pattern match out the coordinates
-    {{_src_x, _src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}} =
-      scene.assigns.player_sprite
-
-    frame = scene.assigns.frame
-
-    new_frame =
-      cond do
-        frame < 9 -> frame + 1
-        true -> 0
-      end
-
-    sprites =
-      if scene.assigns.is_walking do
-        @walking_sprites
-      else
-        @idle_sprites
-      end
-
-    player_sprite = Enum.at(sprites, new_frame) |> elem(0)
-
+  def handle_input({:key, {:key_d, 1, _}} = _event, _context, scene) do
     # update the state
     scene =
       scene
-      |> assign(
-        player_sprite: {player_sprite, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}},
-        frame: new_frame,
-        is_walking: true
-      )
+      |> assign(is_walking: true)
 
     {:noreply, scene}
   end
 
   # press and hold d key (walking)
-  def handle_input({:key, {:key_d, 2, _}} = event, _context, scene) do
-    IO.inspect(event)
-    # pattern match out the coordinates
-    {{_src_x, _src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}} =
-      scene.assigns.player_sprite
-
-    frame = scene.assigns.frame
-
-    new_frame =
-      cond do
-        frame < 9 -> frame + 1
-        true -> 0
-      end
-
-    player_sprite = Enum.at(@walking_sprites, new_frame) |> elem(0)
-
+  def handle_input({:key, {:key_d, 2, _}} = _event, _context, scene) do
     # update the state
     scene =
       scene
-      |> assign(
-        player_sprite: {player_sprite, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}},
-        frame: new_frame,
-        is_walking: true
-      )
+      |> assign(is_walking: true)
 
     {:noreply, scene}
   end
