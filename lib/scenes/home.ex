@@ -78,6 +78,15 @@ defmodule MyApp.Scene.Home do
       |> rect({MyApp.Utils.screen_width(), MyApp.Utils.screen_height()},
         fill: {:color, :light_gray}
       )
+      # rectangle for the "sky"
+      |> rect({MyApp.Utils.screen_width(), (MyApp.Utils.screen_height() / 2 + 46) |> trunc()},
+        fill: {:color, :sky_blue}
+      )
+      # rectangle for the "floor"
+      |> rect({MyApp.Utils.screen_width(), (MyApp.Utils.screen_height() / 2) |> trunc()},
+        translate: {0, (MyApp.Utils.screen_height() / 2 + 46) |> trunc()},
+        fill: {:color, :dark_green}
+      )
       # initial player sprite
       |> sprites(
         {@character_sprite_path,
