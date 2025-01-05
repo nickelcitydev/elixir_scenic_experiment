@@ -75,12 +75,10 @@ defmodule MyApp.Scene.Home do
     graph =
       Graph.build()
       # rectangle used for capturing cursor input
-      |> rect({MyApp.Utils.screen_width(), MyApp.Utils.screen_height()},
-        fill: {:color, :light_gray}
-      )
+      |> rect({MyApp.Utils.screen_width(), MyApp.Utils.screen_height()})
       # rectangle for the "sky"
       |> rect({MyApp.Utils.screen_width(), (MyApp.Utils.screen_height() / 2 + 46) |> trunc()},
-        fill: {:color, :sky_blue}
+        fill: {:image, "sprites/sky_tile.png"}
       )
       # rectangle for the "floor"
       |> rect({MyApp.Utils.screen_width(), (MyApp.Utils.screen_height() / 2) |> trunc()},
@@ -139,13 +137,23 @@ defmodule MyApp.Scene.Home do
     new_dst_x =
       if scene.assigns.is_walking do
         if direction == :right do
-          dst_x + @step
+          if dst_x + @step > MyApp.Utils.screen_width() - 48 do
+            MyApp.Utils.screen_width() - 48
+          else
+            dst_x + @step
+          end
         else
-          dst_x - @step
+          if dst_x - @step < 0 do
+            0
+          else
+            dst_x - @step
+          end
         end
       else
         dst_x
       end
+
+    IO.inspect(new_dst_x)
 
     player_sprite = Enum.at(sprites, new_frame) |> elem(0)
 
